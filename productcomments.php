@@ -52,7 +52,7 @@ class ProductComments extends Module
     {
         $this->name = 'productcomments';
         $this->tab = 'front_office_features';
-        $this->version = '4.0.0';
+        $this->version = '4.0.1';
         $this->author = 'thirty bees';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -977,7 +977,11 @@ class ProductComments extends Module
      */
     public function hookHeader()
     {
-        $this->context->controller->addCSS($this->_path.'views/css/productcomments.css', 'all');
+        if (file_exists(_PS_THEME_DIR_.'css'.DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.$this->name.DIRECTORY_SEPARATOR.$this->name.'.css')) {
+            $this->context->controller->addCSS(_PS_THEME_DIR_.'css'.DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.$this->name.DIRECTORY_SEPARATOR.$this->name.'.css', 'all');
+        } else {
+            $this->context->controller->addCSS($this->_path.'views/css/productcomments.css', 'all');
+        }
 
         $this->page_name = Dispatcher::getInstance()->getController();
         if (in_array($this->page_name, ['product', 'productscomparison'])) {

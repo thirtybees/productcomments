@@ -9,8 +9,7 @@
 #product_comments_block_extra a {
 	padding-left: 10px;
 	text-decoration: none;
-	background: url(img/bg_li.png) no-repeat scroll 1px 45% #fff;
-
+	background: url(../img/bg_li.png) no-repeat scroll 1px 45% #fff;
 }
 
 #product_comments_block_extra a:hover {
@@ -31,11 +30,11 @@
 }
 
 #product_comments_block_extra div.star {
-	background: url(img/star.gif) no-repeat scroll 0 0 transparent
+	background: url(../img/star.gif) no-repeat scroll 0 0 transparent
 }
 
 #product_comments_block_extra div.star_on {
-	background: url(img/star.gif) no-repeat scroll 0 -12px transparent
+	background: url(../img/star.gif) no-repeat scroll 0 -12px transparent
 }
 
 #product_comments_block_extra .comments_advices {
@@ -157,14 +156,13 @@
 
 #new_comment_form button {
 	cursor: pointer;
-	cursor: pointer;
 	display: inline-block;
 	padding: 4px 7px 3px 7px;
 	border: 1px solid #CC9900;
 	border-radius: 3px 3px 3px 3px;
 	font-weight: bold;
 	color: #000;
-	background: url(img/bg_bt.gif) repeat-x scroll 0 0 #F4B61B
+	background: url(../img/bg_bt.gif) repeat-x scroll 0 0 #F4B61B
 }
 
 #new_comment_form #criterions_list {
@@ -226,7 +224,7 @@
 
 #product_comments_block_tab div.star,
 #product_comments_block_tab div.star_on {
-	background: url(img/star.gif) no-repeat 0 0 transparent
+	background: url(../img/star.gif) no-repeat 0 0 transparent
 }
 
 #product_comments_block_tab div.star_on {
@@ -262,7 +260,7 @@
 
 #product_comments_block_tab div.comment_details li {
 	padding: 2px 0 2px 12px;
-	background: url(img/bg_li.png) no-repeat 1px 45% #fff
+	background: url(../img/bg_li.png) no-repeat 1px 45% #fff
 }
 
 #product_comments_block_tab a {
@@ -283,7 +281,7 @@
 	border-radius: 3px 3px 3px 3px;
 	color: #000;
 	font-weight: bold;
-	background: url("img/bg_bt.gif") repeat-x scroll 0 0 #F4B61B
+	background: url(../img/bg_bt.gif) repeat-x scroll 0 0 #F4B61B
 }
 
 #product_comments_block_tab button.usefulness_btn:hover {
