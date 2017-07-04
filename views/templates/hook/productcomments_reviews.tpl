@@ -21,6 +21,15 @@
  * @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  *  PrestaShop is an internationally registered trademark & property of PrestaShop SA
 *}
-<a href="{$href}" class="btn btn-success" title="{$action}">
-  <i class="icon-check"></i> {$action}
-</a>
+<div class="comments_note">
+  <div class="star_content clearfix">
+    {section name="i" start=0 loop=5 step=1}
+      {if $averageTotal le $smarty.section.i.index}
+        <div class="star"></div>
+      {else}
+        <div class="star star_on"></div>
+      {/if}
+    {/section}
+  </div>
+  <span>{l s='%s Review(s)'|sprintf:$averageTotal mod='productcomments'}&nbsp</span>
+</div>

@@ -1,4 +1,4 @@
-{*
+/**
  * 2007-2016 PrestaShop
  *
  * Thirty Bees is an extension to the PrestaShop e-commerce software developed by PrestaShop SA
@@ -20,7 +20,19 @@
  * @copyright 2007-2016 PrestaShop SA
  * @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  *  PrestaShop is an internationally registered trademark & property of PrestaShop SA
-*}
-<a href="{$href}" class="btn btn-success" title="{$action}">
-  <i class="icon-check"></i> {$action}
-</a>
+ */
+
+function getProductCriterionForm() {
+  if (document.forms) {
+    return (document.forms['product_criterion_form']);
+  } else {
+    return (document.product_criterion_form);
+  }
+}
+
+function getProductCriterion(path, id_product, id_lang) {
+  $.get(path + 'productcommentscriterion.php', { id_product: id_product, id_lang: id_lang },
+    function (data) {
+      document.getElementById('product_criterions').innerHTML = data;
+    });
+}

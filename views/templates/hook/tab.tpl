@@ -21,6 +21,5 @@
  * @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  *  PrestaShop is an internationally registered trademark & property of PrestaShop SA
 *}
-<a href="{$href}" class="btn btn-success" title="{$action}">
-  <i class="icon-check"></i> {$action}
-</a>
+
+<li><a href="#idTab5" class="idTabHrefShort">{l s='Comments' mod='productcomments'}</a></li>
