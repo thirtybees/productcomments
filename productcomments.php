@@ -865,7 +865,7 @@ class ProductComments extends Module
      */
     public function getCacheId($idProduct = null)
     {
-        return parent::getCacheId().'|'.(int) $idProduct;
+        return parent::getCacheId().'|'.(int) $idProduct.'|'.(int) $this->context->language->id.'|'.(int) $this->context->shop->id;
     }
 
     /**
