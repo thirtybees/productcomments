@@ -30,7 +30,7 @@ if (!defined('_TB_VERSION_')) {
     exit;
 }
 
-require_once __DIR__.'/classes/autoload.php';
+require_once __DIR__.'/vendor/autoload.php';
 
 /**
  * Class ProductComments
@@ -55,7 +55,7 @@ class ProductComments extends Module
     {
         $this->name = 'productcomments';
         $this->tab = 'front_office_features';
-        $this->version = '4.0.1';
+        $this->version = '4.0.2';
         $this->author = 'thirty bees';
         $this->need_instance = 0;
         $this->bootstrap = true;
