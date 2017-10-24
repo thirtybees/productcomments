@@ -55,7 +55,7 @@ class ProductComments extends Module
     {
         $this->name = 'productcomments';
         $this->tab = 'front_office_features';
-        $this->version = '4.0.2';
+        $this->version = '4.0.3';
         $this->author = 'thirty bees';
         $this->need_instance = 0;
         $this->bootstrap = true;
