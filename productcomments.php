@@ -962,13 +962,25 @@ class ProductComments extends Module
                 'productcomment_cover_image'              => $coverImage,
                 'mediumSize'                              => Image::getSize(ImageType::getFormatedName('medium')),
                 'nbComments'                              => (int) ProductComment::getCommentNumber((int) Tools::getValue('id_product')),
-                'productcomments_controller_url'          => $this->context->link->getModuleLink('productcomments'),
+                'productcomments_controller_url'          => $this->context->link->getModuleLink('productcomments', 'default', [], true),
                 'productcomments_url_rewriting_activated' => Configuration::get('PS_REWRITING_SETTINGS', 0),
                 'moderation_active'                       => (int) Configuration::get('PRODUCT_COMMENTS_MODERATE'),
             ]
         );
 
         $this->context->controller->pagination((int) ProductComment::getCommentNumber((int) Tools::getValue('id_product')));
+
+        Media::addJsDef([
+            'productcomments_controller_url' => htmlspecialchars($this->context->link->getModuleLink('productcomments', 'default', [], true), ENT_QUOTES, 'UTF-8'),
+            'confirm_report_message' => htmlspecialchars($this->l('Are you sure that you want to report this comment?'), ENT_QUOTES, 'UTF-8'),
+            'secure_key' => htmlspecialchars($this->secure_key, ENT_QUOTES, 'UTF-8'),
+            'productcomments_url_rewrite' => (bool) Configuration::get('PS_REWRITING_SETTINGS', 0),
+            'productcomment_added' => htmlspecialchars($this->l('Your comment has been added!'), ENT_QUOTES, 'UTF-8'),
+            'productcomment_added_moderation' => htmlspecialchars($this->l('Your comment has been submitted and will be available once approved by a moderator.'), ENT_QUOTES, 'UTF-8'),
+            'productcomment_title' => htmlspecialchars($this->l('New comment'), ENT_QUOTES, 'UTF-8'),
+            'productcomment_ok' => htmlspecialchars($this->l('OK'), ENT_QUOTES, 'UTF-8'),
+            'moderation_active' => (int) Configuration::get('PRODUCT_COMMENTS_MODERATE'),
+        ]);
 
         return $this->display(__FILE__, 'productcomments.tpl');
     }
