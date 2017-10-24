@@ -32,6 +32,9 @@ if (!defined('_TB_VERSION_')) {
 
 require_once __DIR__.'/classes/autoload.php';
 
+/**
+ * Class ProductComments
+ */
 class ProductComments extends Module
 {
     // @codingStandardsIgnoreStart
@@ -158,7 +161,7 @@ class ProductComments extends Module
             } elseif (!$sql = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'sql'.DIRECTORY_SEPARATOR.'install.sql')) {
                 return false;
             }
-            $sql = str_replace(['PREFIX_', 'ENGINE_TYPE'], [_DB_PREFIX_, _MYSQL_ENGINE_], $sql);
+            $sql = str_replace(['PREFIX_', 'ENGINE_TYPE', 'DB_NAME'], [_DB_PREFIX_, _MYSQL_ENGINE_, _DB_NAME_], $sql);
             $sql = preg_split("/;\s*[\r\n]+/", trim($sql));
 
             foreach ($sql as $query) {

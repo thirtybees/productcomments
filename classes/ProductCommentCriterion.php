@@ -25,6 +25,14 @@
 
 namespace ProductCommentsModule;
 
+use Cache;
+use Db;
+use DbQuery;
+use ProductComments;
+use Shop;
+use Tools;
+use Validate;
+
 if (!defined('_TB_VERSION_')) {
     exit;
 }
@@ -67,31 +75,34 @@ class ProductCommentCriterion extends \ObjectModel
      */
     public static function getByProduct($idProduct, $idLang)
     {
-        if (!\Validate::isUnsignedId($idProduct) ||
-            !\Validate::isUnsignedId($idLang)
+        if (!Validate::isUnsignedId($idProduct) ||
+            !Validate::isUnsignedId($idLang)
         ) {
-            die(\Tools::displayError());
+            die(Tools::displayError());
         }
 
         $cacheId = 'ProductCommentCriterion::getByProduct_'.(int) $idProduct.'-'.(int) $idLang;
-        if (!\Cache::isStored($cacheId)) {
-            $result = \Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
-                (new \DbQuery())
+        if (!Cache::isStored($cacheId)) {
+            $result = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
+                (new DbQuery())
                     ->select('pcc.`'.bqSQL(static::$definition['primary']).'`, pccl.`name`')
                     ->from(bqSQL(static::$definition['table']), 'pcc')
-                    ->leftJoin('product_comment_criterion_lang', 'pccl', 'pcc.`'.bqSQL(static::$definition['primary']).'` = pccl.`'.bqSQL(static::$definition['primary']).'`')
+                    ->leftJoin(
+                        'product_comment_criterion_lang',
+                        'pccl',
+                        'pcc.`'.bqSQL(static::$definition['primary']).'` = pccl.`'.bqSQL(static::$definition['primary']).'` AND pccl.`id_lang` = '.(int) $idLang
+                    )
                     ->leftJoin('product_comment_criterion_product', 'pccp', 'pcc.`'.bqSQL(static::$definition['primary']).'` = pccp.`'.bqSQL(static::$definition['primary']).'`')
                     ->leftJoin('product_comment_criterion_category', 'pccc', 'pcc.`'.bqSQL(static::$definition['primary']).'` = pccc.`'.bqSQL(static::$definition['primary']).'`')
-                    ->leftJoin('product_shop', 'ps', 'ps.`id_category_default` = pccc.`id_category` AND ps.`id_product` = '.(int) $idProduct)
-                    ->where('pccl.`id_lang` = '.(int) $idLang)
+                    ->leftJoin('product_shop', 'ps', 'ps.`id_category_default` = pccc.`id_category` AND ps.`id_product` = '.(int) $idProduct.' AND ps.`id_shop` = '.(int) Shop::getContextShopID())
                     ->where('pccp.`id_product` IS NOT NULL OR ps.`id_product` IS NOT NULL OR pcc.`id_product_comment_criterion_type` = 1')
                     ->where('pcc.`active` = 1')
                     ->groupBy('pcc.`id_product_comment_criterion`')
             );
-            \Cache::store($cacheId, $result);
+            Cache::store($cacheId, $result);
         }
 
-        return \Cache::retrieve($cacheId);
+        return Cache::retrieve($cacheId);
     }
 
     /**
@@ -105,12 +116,12 @@ class ProductCommentCriterion extends \ObjectModel
      */
     public static function getCriterions($idLang, $type = false, $active = false)
     {
-        if (!\Validate::isUnsignedId($idLang)) {
-            die(\Tools::displayError());
+        if (!Validate::isUnsignedId($idLang)) {
+            die(Tools::displayError());
         }
 
-        $criterions = \Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
-            (new \DbQuery())
+        $criterions = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
+            (new DbQuery())
                 ->select('pcc.`'.bqSQL(static::$definition['primary']).'`, pcc.`id_product_comment_criterion_type`, pccl.`name`, pcc.`active`')
                 ->from(bqSQL(static::$definition['table']), 'pcc')
                 ->innerJoin('product_comment_criterion_lang', 'pccl', 'pcc.`'.bqSQL(static::$definition['primary']).'` = pccl.`'.bqSQL(static::$definition['primary']).'`')
@@ -134,7 +145,7 @@ class ProductCommentCriterion extends \ObjectModel
     public static function getTypes()
     {
         // Instance of module class for translations
-        $module = new \ProductComments();
+        $module = new ProductComments();
 
         return [
             1 => $module->l('Valid for the entire catalog', 'ProductCommentCriterion'),
@@ -195,11 +206,11 @@ class ProductCommentCriterion extends \ObjectModel
      */
     public function addProduct($idProduct)
     {
-        if (!\Validate::isUnsignedId($idProduct)) {
-            die(\Tools::displayError());
+        if (!Validate::isUnsignedId($idProduct)) {
+            die(Tools::displayError());
         }
 
-        return \Db::getInstance()->insert(
+        return Db::getInstance()->insert(
             'product_comment_criterion_product',
             [
                 bqSQL(static::$definition['primary']) => (int) $this->id,
@@ -217,11 +228,11 @@ class ProductCommentCriterion extends \ObjectModel
      */
     public function addCategory($idCategory)
     {
-        if (!\Validate::isUnsignedId($idCategory)) {
-            die(\Tools::displayError());
+        if (!Validate::isUnsignedId($idCategory)) {
+            die(Tools::displayError());
         }
 
-        return \Db::getInstance()->insert(
+        return Db::getInstance()->insert(
             'product_comment_criterion_category',
             [
                 bqSQL(static::$definition['primary']) => (int) $this->id,
@@ -240,8 +251,8 @@ class ProductCommentCriterion extends \ObjectModel
      */
     public function addGrade($idProductComment, $grade)
     {
-        if (!\Validate::isUnsignedId($idProductComment)) {
-            die(\Tools::displayError());
+        if (!Validate::isUnsignedId($idProductComment)) {
+            die(Tools::displayError());
         }
         if ($grade < 0) {
             $grade = 0;
@@ -249,7 +260,7 @@ class ProductCommentCriterion extends \ObjectModel
             $grade = 10;
         }
 
-        return \Db::getInstance()->insert(
+        return Db::getInstance()->insert(
             'product_comment_grade',
             [
                 bqSQL(static::$definition['primary']) => (int) $this->id,
@@ -264,8 +275,8 @@ class ProductCommentCriterion extends \ObjectModel
      */
     public function getProducts()
     {
-        $res = \Db::getInstance()->executeS(
-            (new \DbQuery())
+        $res = Db::getInstance()->executeS(
+            (new DbQuery())
                 ->select('pccp.`id_product`, pccp.`'.bqSQL(static::$definition['primary']).'`')
                 ->from('product_comment_criterion_product', 'pccp')
                 ->where('pccp.`'.bqSQL(static::$definition['primary']).'` = '.(int) $this->id)
@@ -285,8 +296,8 @@ class ProductCommentCriterion extends \ObjectModel
      */
     public function getCategories()
     {
-        $res = \Db::getInstance()->executeS(
-            (new \DbQuery())
+        $res = Db::getInstance()->executeS(
+            (new DbQuery())
                 ->select('pccc.`id_category`, pccc.`'.bqSQL(static::$definition['primary']).'`')
                 ->from('product_comment_criterion_category', 'pccc')
                 ->where('pccc.`'.bqSQL(static::$definition['primary']).'` = '.(int) $this->id)
@@ -312,7 +323,7 @@ class ProductCommentCriterion extends \ObjectModel
             $idProductCommentCriterion = (int) $this->id;
         }
 
-        return \Db::getInstance()->delete(
+        return Db::getInstance()->delete(
             'product_comment_criterion_category',
             '`'.bqSQL(static::$definition['primary']).'` = '.(int) $idProductCommentCriterion
         );
@@ -329,7 +340,7 @@ class ProductCommentCriterion extends \ObjectModel
             $idProductCommentCriterion = (int) $this->id;
         }
 
-        return \Db::getInstance()->delete(
+        return Db::getInstance()->delete(
             'product_comment_criterion_product',
             '`'.bqSQL(static::$definition['primary']).'` = '.(int) $idProductCommentCriterion
         );
@@ -346,7 +357,7 @@ class ProductCommentCriterion extends \ObjectModel
             $idProductCommentCriterion = (int) $this->id;
         }
 
-        return \Db::getInstance()->delete(
+        return Db::getInstance()->delete(
             'product_comment_grade',
             '`'.bqSQL(static::$definition['primary']).'` = '.(int) $idProductCommentCriterion
         );

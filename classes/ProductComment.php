@@ -25,6 +25,15 @@
 
 namespace ProductCommentsModule;
 
+use Cache;
+use Configuration;
+use Context;
+use Db;
+use DbQuery;
+use Hook;
+use Shop;
+use Validate;
+
 if (!defined('_TB_VERSION_')) {
     exit;
 }
@@ -102,9 +111,9 @@ class ProductComment extends \ObjectModel
         }
 
         $cacheId = 'ProductComment::getByProduct_'.(int) $idProduct.'-'.(int) $p.'-'.(int) $n.'-'.(int) $idCustomer.'-'.(bool) $validate;
-        if (!\Cache::isStored($cacheId)) {
-            $result = \Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
-                (new \DbQuery())
+        if (!Cache::isStored($cacheId)) {
+            $result = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
+                (new DbQuery())
                     ->select('pc.`id_product_comment`')
                     ->select('(SELECT count(*) FROM `'._DB_PREFIX_.'product_comment_usefulness` pcu WHERE pcu.`id_product_comment` = pc.`id_product_comment` AND pcu.`usefulness` = 1) AS `total_useful`')
                     ->select('(SELECT count(*) FROM `'._DB_PREFIX_.'product_comment_usefulness` pcu WHERE pcu.`id_product_comment` = pc.`id_product_comment`) AS `total_advice`')
@@ -118,10 +127,10 @@ class ProductComment extends \ObjectModel
                     ->orderBy('pc.`date_add` DESC')
                     ->limit((int) $n ?: 0, $n ? (int) (($p - 1) * $n) : 0)
             );
-            \Cache::store($cacheId, $result);
+            Cache::store($cacheId, $result);
         }
 
-        return \Cache::retrieve($cacheId);
+        return Cache::retrieve($cacheId);
     }
 
     /**
@@ -137,9 +146,9 @@ class ProductComment extends \ObjectModel
     public static function getByCustomer($idProduct, $idCustomer, $getLast = false, $idGuest = false)
     {
         $cacheId = 'ProductComment::getByCustomer_'.(int) $idProduct.'-'.(int) $idCustomer.'-'.(bool) $getLast.'-'.(int) $idGuest;
-        if (!\Cache::isStored($cacheId)) {
-            $results = \Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
-                (new \DbQuery())
+        if (!Cache::isStored($cacheId)) {
+            $results = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
+                (new DbQuery())
                     ->select('*')
                     ->from(bqSQL(static::$definition['table']), 'pc')
                     ->where('pc.`id_product` = '.(int) $idProduct)
@@ -152,10 +161,10 @@ class ProductComment extends \ObjectModel
                 $results = array_shift($results);
             }
 
-            \Cache::store($cacheId, $results);
+            Cache::store($cacheId, $results);
         }
 
-        return \Cache::retrieve($cacheId);
+        return Cache::retrieve($cacheId);
     }
 
     /**
@@ -165,10 +174,10 @@ class ProductComment extends \ObjectModel
      */
     public static function getRatings($idProduct)
     {
-        $validate = \Configuration::get('PRODUCT_COMMENTS_MODERATE');
+        $validate = Configuration::get('PRODUCT_COMMENTS_MODERATE');
 
-        return \Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow(
-            (new \DbQuery())
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow(
+            (new DbQuery())
                 ->select('(SUM(pc.`grade`) / COUNT(pc.`grade`)) AS `avg`')
                 ->select('MIN(pc.`grade`) AS `min`')
                 ->select('MAX(pc.`grade`) AS `max`')
@@ -187,10 +196,10 @@ class ProductComment extends \ObjectModel
      */
     public static function getAverageGrade($idProduct)
     {
-        $validate = \Configuration::get('PRODUCT_COMMENTS_MODERATE');
+        $validate = Configuration::get('PRODUCT_COMMENTS_MODERATE');
 
-        return \Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow(
-            (new \DbQuery())
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow(
+            (new DbQuery())
                 ->select('(SUM(pc.`grade`) / COUNT(pc.`grade`)) AS `grade`')
                 ->from(bqSQL(static::$definition['table']), 'pc')
                 ->where('pc.`id_product` = '.(int) $idProduct)
@@ -244,22 +253,29 @@ class ProductComment extends \ObjectModel
      */
     public static function getGradeByProduct($idProduct, $idLang)
     {
-        if (!\Validate::isUnsignedId($idProduct) ||
-            !\Validate::isUnsignedId($idLang)
+        if (!Validate::isUnsignedId($idProduct) ||
+            !Validate::isUnsignedId($idLang)
         ) {
             return false;
         }
-        $validate = \Configuration::get('PRODUCT_COMMENTS_MODERATE');
+        $validate = Configuration::get('PRODUCT_COMMENTS_MODERATE');
 
-        return \Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
-            (new \DbQuery())
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
+            (new DbQuery())
                 ->select('pc.`'.bqSQL(static::$definition['primary']).'`, pcg.`grade`, pccl.`name`, pcc.`'.bqSQL(ProductCommentCriterion::$definition['primary']).'`')
                 ->from(bqSQL(static::$definition['table']), 'pc')
                 ->leftJoin('product_comment_grade', 'pcg', 'pcg.`'.bqSQL(static::$definition['primary']).'` = pc.`'.bqSQL(static::$definition['primary']).'`')
-                ->leftJoin(bqSQL(ProductCommentCriterion::$definition['table']), 'pcc', 'pcc.`'.bqSQL(ProductCommentCriterion::$definition['primary']).'` = pcg.`'.bqSQL(ProductCommentCriterion::$definition['primary']).'`')
-                ->leftJoin(bqSQL(ProductCommentCriterion::$definition['table'].'_lang'), 'pccl', 'pccl.`'.bqSQL(ProductCommentCriterion::$definition['primary']).'` = pcg.`'.bqSQL(ProductCommentCriterion::$definition['primary']).'` AND pccl.`id_lang` = '.(int) $idLang)
+                ->leftJoin(
+                    bqSQL(ProductCommentCriterion::$definition['table']),
+                    'pcc',
+                    'pcc.`'.bqSQL(ProductCommentCriterion::$definition['primary']).'` = pcg.`'.bqSQL(ProductCommentCriterion::$definition['primary']).'`'
+                )
+                ->leftJoin(
+                    bqSQL(ProductCommentCriterion::$definition['table'].'_lang'),
+                    'pccl',
+                    'pccl.`'.bqSQL(ProductCommentCriterion::$definition['primary']).'` = pcg.`'.bqSQL(ProductCommentCriterion::$definition['primary']).'` AND pccl.`id_lang` = '.(int) $idLang
+                )
                 ->where('pc.`id_product` = '.(int) $idProduct)
-                ->where('pccl.`id_lang` = '.(int) $idLang)
                 ->where($validate ? 'pc.`validate` = 1' : '')
         );
     }
@@ -273,13 +289,13 @@ class ProductComment extends \ObjectModel
      */
     public static function getGradedCommentNumber($idProduct)
     {
-        if (!\Validate::isUnsignedId($idProduct)) {
+        if (!Validate::isUnsignedId($idProduct)) {
             return false;
         }
         $validate = (int) \Configuration::get('PRODUCT_COMMENTS_MODERATE');
 
-        $result = \Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow(
-            (new \DbQuery())
+        $result = Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow(
+            (new DbQuery())
                 ->select('COUNT(pc.`id_product`) AS `nbr`')
                 ->from('product_comment', 'pc')
                 ->where('`id_product` = '.(int) $idProduct)
@@ -299,23 +315,23 @@ class ProductComment extends \ObjectModel
      */
     public static function getCommentNumber($idProduct)
     {
-        if (!\Validate::isUnsignedId($idProduct)) {
+        if (!Validate::isUnsignedId($idProduct)) {
             return false;
         }
-        $validate = (int) \Configuration::get('PRODUCT_COMMENTS_MODERATE');
+        $validate = (int) Configuration::get('PRODUCT_COMMENTS_MODERATE');
         $cacheId = 'ProductComment::getCommentNumber_'.(int) $idProduct.'-'.$validate;
-        if (!\Cache::isStored($cacheId)) {
-            $result = (int) \Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue(
-                (new \DbQuery())
+        if (!Cache::isStored($cacheId)) {
+            $result = (int) Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue(
+                (new DbQuery())
                     ->select('COUNT(`'.bqSQL(static::$definition['primary']).'`) AS `nbr`')
                     ->from(bqSQL(static::$definition['table']), 'pc')
                     ->where('`id_product` = '.(int) $idProduct)
                     ->where($validate ? '`validate` = 1' : '')
             );
-            \Cache::store($cacheId, $result);
+            Cache::store($cacheId, $result);
         }
 
-        return \Cache::retrieve($cacheId);
+        return Cache::retrieve($cacheId);
     }
 
     /**
@@ -328,14 +344,14 @@ class ProductComment extends \ObjectModel
      */
     public static function getByValidate($validate = 0, $deleted = false)
     {
-        return \Db::getInstance()->executeS(
-            (new \DbQuery())
+        return Db::getInstance()->executeS(
+            (new DbQuery())
                 ->select('pc.`'.bqSQL(static::$definition['primary']).'`, pc.`id_product`')
                 ->select('IF(c.`id_customer`, CONCAT(c.`firstname`, \' \',  c.`lastname`), pc.`customer_name`) AS `customer_name`')
                 ->select('pc.`title`, pc.`content`, pc.`grade`, pc.`date_add`, pl.`name`')
                 ->from('product_comment', 'pc')
                 ->leftJoin('customer', 'c', 'c.`id_customer` = pc.`id_customer`')
-                ->leftJoin('product_lang', 'pl', 'pl.`id_product` = pc.`id_product` AND pl.`id_lang` = '.(int) \Context::getContext()->language->id.\Shop::addSqlRestrictionOnLang('pl'))
+                ->leftJoin('product_lang', 'pl', 'pl.`id_product` = pc.`id_product` AND pl.`id_lang` = '.(int) \Context::getContext()->language->id.Shop::addSqlRestrictionOnLang('pl'))
                 ->where('pc.`validate` = '.(int) $validate)
                 ->where($deleted ? 'pc.`deleted` = 1' : '')
                 ->orderBy('pc.`date_add` DESC')
@@ -349,13 +365,13 @@ class ProductComment extends \ObjectModel
      */
     public static function getAll()
     {
-        return \Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
-            (new \DbQuery())
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
+            (new DbQuery())
                 ->select('pc.`'.bqSQL(static::$definition['primary']).'`, pc.`id_product`')
                 ->select('IF(c.id_customer, CONCAT(c.`firstname`, \' \',  c.`lastname`), pc.customer_name) AS `customer_name`')
                 ->select('pc.`content`, pc.`grade`, pc.`date_add`, pl.`name`')
                 ->leftJoin('customer', 'c', 'c.`id_customer` = pc.`id_customer`')
-                ->leftJoin('product_lang', 'pl', 'pl.`id_product` = pc.`id_produt` AND pl.`id_lang` = '.(int) \Context::getContext()->language->id.\Shop::addSqlRestrictionOnLang('pl'))
+                ->leftJoin('product_lang', 'pl', 'pl.`id_product` = pc.`id_produt` AND pl.`id_lang` = '.(int) Context::getContext()->language->id.Shop::addSqlRestrictionOnLang('pl'))
                 ->orderBy('pc.`date_add` DESC')
         );
     }
@@ -370,7 +386,7 @@ class ProductComment extends \ObjectModel
      */
     public static function reportComment($idProductComment, $idCustomer)
     {
-        return \Db::getInstance()->insert(
+        return Db::getInstance()->insert(
             'product_comment_report',
             [
                 bqSQL(static::$definition['primary']) => (int) $idProductComment,
@@ -389,8 +405,8 @@ class ProductComment extends \ObjectModel
      */
     public static function isAlreadyReport($idProductComment, $idCustomer)
     {
-        return (bool) \Db::getInstance()->getValue(
-            (new \DbQuery())
+        return (bool) Db::getInstance()->getValue(
+            (new DbQuery())
                 ->select('COUNT(*)')
                 ->from('product_comment_report')
                 ->where('`id_customer` = '.(int) $idCustomer)
@@ -409,7 +425,7 @@ class ProductComment extends \ObjectModel
      */
     public static function setCommentUsefulness($idProductComment, $usefulness, $idCustomer)
     {
-        return \Db::getInstance()->insert(
+        return Db::getInstance()->insert(
             'product_comment_usefulness',
             [
                 bqSQL(static::$definition['primary']) => (int) $idProductComment,
@@ -429,8 +445,8 @@ class ProductComment extends \ObjectModel
      */
     public static function isAlreadyUsefulness($idProductComment, $idCustomer)
     {
-        return (bool) \Db::getInstance()->getValue(
-            (new \DbQuery())
+        return (bool) Db::getInstance()->getValue(
+            (new DbQuery())
                 ->select('COUNT(*)')
                 ->From('product_comment_usefulness')
                 ->where('`id_customer` = '.(int) $idCustomer)
@@ -445,14 +461,14 @@ class ProductComment extends \ObjectModel
      */
     public static function getReportedComments()
     {
-        return \Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
-            (new \DbQuery())
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
+            (new DbQuery())
                 ->select('DISTINCT(pc.`'.bqSQL(static::$definition['primary']).'`), pc.`id_product`')
                 ->select('IF(c.id_customer, CONCAT(c.`firstname`, \' \',  c.`lastname`), pc.customer_name) customer_name')
                 ->select('pc.`content`, pc.`grade`, pc.`date_add`, pl.`name`, pc.`title`')
                 ->from(bqSQL(static::$definition['table']), 'pc')
                 ->leftJoin('customer', 'c', 'c.`id_customer` = pc.`id_customer`')
-                ->leftJoin('product_lang', 'pl', 'pl.`id_product` = pc.`id_product` AND pl.`id_lang` = '.(int) \Context::getContext()->language->id.' AND pl.`id_lang` = '.(int) \Context::getContext()->language->id.\Shop::addSqlRestrictionOnLang('pl'))
+                ->leftJoin('product_lang', 'pl', 'pl.`id_product` = pc.`id_product` AND pl.`id_lang` = '.(int) Context::getContext()->language->id.' AND pl.`id_lang` = '.(int) Context::getContext()->language->id.\Shop::addSqlRestrictionOnLang('pl'))
                 ->orderBy('pc.`date_add` DESC')
         );
     }
@@ -466,11 +482,11 @@ class ProductComment extends \ObjectModel
      */
     public function validate($validate = 1)
     {
-        if (!\Validate::isUnsignedId($this->id)) {
+        if (!Validate::isUnsignedId($this->id)) {
             return false;
         }
 
-        $success = \Db::getInstance()->update(
+        $success = Db::getInstance()->update(
             bqSQL(static::$definition['table']),
             [
                 'validate' => (int) $validate,
@@ -478,7 +494,7 @@ class ProductComment extends \ObjectModel
             '`'.bqSQL(static::$definition['primary']).'` = '.(int) $this->id
         );
 
-        \Hook::exec('actionObjectProductCommentValidateAfter', ['object' => $this]);
+        Hook::exec('actionObjectProductCommentValidateAfter', ['object' => $this]);
 
         return $success;
     }
@@ -507,11 +523,11 @@ class ProductComment extends \ObjectModel
      */
     public static function deleteGrades($idProductComment)
     {
-        if (!\Validate::isUnsignedId($idProductComment)) {
+        if (!Validate::isUnsignedId($idProductComment)) {
             return false;
         }
 
-        return \Db::getInstance()->delete(
+        return Db::getInstance()->delete(
             'product_comment_grade',
             '`'.bqSQL(static::$definition['primary']).'` = '.(int) $idProductComment
         );
@@ -526,11 +542,11 @@ class ProductComment extends \ObjectModel
      */
     public static function deleteReports($idProductComment)
     {
-        if (!\Validate::isUnsignedId($idProductComment)) {
+        if (!Validate::isUnsignedId($idProductComment)) {
             return false;
         }
 
-        return \Db::getInstance()->delete(
+        return Db::getInstance()->delete(
             'product_comment_report',
             '`'.bQSQL(static::$definition['primary']).'` = '.(int) $idProductComment
         );
@@ -545,11 +561,11 @@ class ProductComment extends \ObjectModel
      */
     public static function deleteUsefulness($idProductComment)
     {
-        if (!\Validate::isUnsignedId($idProductComment)) {
+        if (!Validate::isUnsignedId($idProductComment)) {
             return false;
         }
 
-        return \Db::getInstance()->delete(
+        return Db::getInstance()->delete(
             'product_comment_usefulness',
             '`'.bqSQL(static::$definition['primary']).'` = '.(int) $idProductComment
         );
