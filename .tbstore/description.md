@@ -1,0 +1,1 @@
+The Product Comments module will allow your customers to leave reviews and rate your products for future customers to see. Reviews are a great tool in increasing sales for products.
