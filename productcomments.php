@@ -833,7 +833,7 @@ class ProductComments extends Module
             ]
         );
 
-        return $this->display(__FILE__, 'tab.tpl');
+        return $this->display(__FILE__, 'views/templates/hook/tab.tpl');
     }
 
     /**
@@ -856,7 +856,7 @@ class ProductComments extends Module
             );
         }
 
-        return $this->display(__FILE__, 'productcomments_reviews.tpl', $this->getCacheId($idProduct));
+        return $this->display(__FILE__, 'views/templates/hook/productcomments_reviews.tpl', $this->getCacheId($idProduct));
     }
 
     /**
@@ -915,7 +915,7 @@ class ProductComments extends Module
             ]
         );
 
-        return $this->display(__FILE__, 'productcomments-extra.tpl');
+        return $this->display(__FILE__, 'views/templates/hook/productcomments-extra.tpl');
     }
 
     /**
@@ -982,7 +982,7 @@ class ProductComments extends Module
             'moderation_active' => (int) Configuration::get('PRODUCT_COMMENTS_MODERATE'),
         ]);
 
-        return $this->display(__FILE__, 'productcomments.tpl');
+        return $this->display(__FILE__, 'views/templates/hook/productcomments.tpl');
     }
 
     /**
@@ -1056,7 +1056,7 @@ class ProductComments extends Module
             ]
         );
 
-        return $this->display(__FILE__, 'products-comparison.tpl');
+        return $this->display(__FILE__, 'views/templates/hook/products-comparison.tpl');
     }
 
     /**
