@@ -3,12 +3,13 @@ compatible_versions: 1.0.0+
 author: thirty bees
 category: front office
 tags:
-  - review
-  - rating
-  - product review
-  - product rating
+- review
+- rating
+- product review
+- product rating
+- productcomments
 description_short: Product Comments will allow your users to leave reviews of your products on your site.
 description: description.md
 images:
-  - image-1.png
+- image-1.png
 license: AFL
