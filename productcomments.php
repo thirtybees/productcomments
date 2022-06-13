@@ -893,8 +893,6 @@ class ProductComments extends Module
         /** @var ProductController $controller */
         $controller = $this->context->controller;
         $product = $controller->getProduct();
-        $image = Product::getCover((int) Tools::getValue('id_product'));
-        $coverImage = $this->context->link->getImageLink($product->link_rewrite, $image['id_image'], 'medium_default');
 
         $this->context->smarty->assign(
             [
@@ -903,8 +901,7 @@ class ProductComments extends Module
                 'secure_key'                 => $this->secure_key,
                 'logged'                     => $this->context->customer->isLogged(true),
                 'allow_guests'               => (int) Configuration::get('PRODUCT_COMMENTS_ALLOW_GUESTS'),
-                'productcomment_cover'       => (int) Tools::getValue('id_product').'-'.(int) $image['id_image'], // retro compat
-                'productcomment_cover_image' => $coverImage,
+                'productcomment_cover_image' => $this->getCoverImage($product),
                 'mediumSize'                 => Image::getSize(ImageType::getFormatedName('medium')),
                 'criterions'                 => ProductCommentCriterion::getByProduct((int) Tools::getValue('id_product'), $this->context->language->id),
                 'action_url'                 => '',
@@ -940,8 +937,6 @@ class ProductComments extends Module
         /** @var ProductController $controller */
         $controller = $this->context->controller;
         $product = $controller->getProduct();
-        $image = Product::getCover((int) Tools::getValue('id_product'));
-        $coverImage = $this->context->link->getImageLink($product->link_rewrite, $image['id_image'], 'medium_default');
 
         $this->context->smarty->assign(
             [
@@ -958,8 +953,7 @@ class ProductComments extends Module
                 'delay'                                   => Configuration::get('PRODUCT_COMMENTS_MINIMAL_TIME'),
                 'id_product_comment_form'                 => (int) Tools::getValue('id_product'),
                 'secure_key'                              => $this->secure_key,
-                'productcomment_cover'                    => (int) Tools::getValue('id_product').'-'.(int) $image['id_image'],
-                'productcomment_cover_image'              => $coverImage,
+                'productcomment_cover_image'              => $this->getCoverImage($product),
                 'mediumSize'                              => Image::getSize(ImageType::getFormatedName('medium')),
                 'nbComments'                              => (int) ProductComment::getCommentNumber((int) Tools::getValue('id_product')),
                 'productcomments_controller_url'          => $this->context->link->getModuleLink('productcomments', 'default', [], true),
@@ -1081,5 +1075,20 @@ class ProductComments extends Module
                 }
             }
         }
+    }
+
+    /**
+     * @param Product $product
+     * @return string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     */
+    protected function getCoverImage(Product $product)
+    {
+        $image = Product::getCover((int)$product->id);
+        if (isset($image['id_image'])) {
+            return $this->context->link->getImageLink($product->link_rewrite, $image['id_image'], 'medium_default');
+        }
+        return '';
     }
 }
