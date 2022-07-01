@@ -458,19 +458,20 @@ class ProductComment extends \ObjectModel
      * Get reported comments
      *
      * @return array Comments
+     * @throws \PrestaShopException
      */
     public static function getReportedComments()
     {
-        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
-            (new DbQuery())
-                ->select('DISTINCT(pc.`'.bqSQL(static::$definition['primary']).'`), pc.`id_product`')
+        $query = (new DbQuery())
+                ->select('DISTINCT pc.`'.bqSQL(static::$definition['primary']).'`, pc.`id_product`')
                 ->select('IF(c.id_customer, CONCAT(c.`firstname`, \' \',  c.`lastname`), pc.customer_name) customer_name')
                 ->select('pc.`content`, pc.`grade`, pc.`date_add`, pl.`name`, pc.`title`')
-                ->from(bqSQL(static::$definition['table']), 'pc')
+                ->from('product_comment_report', 'pcr')
+                ->innerJoin(static::$definition['table'], 'pc', '(pc.id_product_comment = pcr.id_product_comment)')
                 ->leftJoin('customer', 'c', 'c.`id_customer` = pc.`id_customer`')
                 ->leftJoin('product_lang', 'pl', 'pl.`id_product` = pc.`id_product` AND pl.`id_lang` = '.(int) Context::getContext()->language->id.' AND pl.`id_lang` = '.(int) Context::getContext()->language->id.\Shop::addSqlRestrictionOnLang('pl'))
-                ->orderBy('pc.`date_add` DESC')
-        );
+                ->orderBy('pc.`date_add` DESC');
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
     }
 
     /**
