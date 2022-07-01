@@ -89,6 +89,8 @@ class ProductComments extends Module
 
     /**
      * @return bool
+     * @throws HTMLPurifier_Exception
+     * @throws PrestaShopException
      */
     public function reset()
     {
@@ -106,20 +108,15 @@ class ProductComments extends Module
      * @param bool $keep
      *
      * @return bool
+     * @throws PrestaShopException
      */
     public function uninstall($keep = true)
     {
-        if (!parent::uninstall() || ($keep && !$this->deleteTables()) ||
+        if (!parent::uninstall() ||
+            ($keep && !$this->deleteTables()) ||
             !Configuration::deleteByName('PRODUCT_COMMENTS_MODERATE') ||
             !Configuration::deleteByName('PRODUCT_COMMENTS_ALLOW_GUESTS') ||
-            !Configuration::deleteByName('PRODUCT_COMMENTS_MINIMAL_TIME') ||
-            !$this->unregisterHook('extraProductComparison') ||
-            !$this->unregisterHook('displayRightColumnProduct') ||
-            !$this->unregisterHook('productTabContent') ||
-            !$this->unregisterHook('header') ||
-            !$this->unregisterHook('productTab') ||
-            !$this->unregisterHook('top') ||
-            !$this->unregisterHook('displayProductListReviews')
+            !Configuration::deleteByName('PRODUCT_COMMENTS_MINIMAL_TIME')
         ) {
             return false;
         }
@@ -129,6 +126,7 @@ class ProductComments extends Module
 
     /**
      * @return bool
+     * @throws PrestaShopException
      */
     public function deleteTables()
     {
@@ -150,6 +148,9 @@ class ProductComments extends Module
      * @param bool $keep
      *
      * @return bool
+     * @throws HTMLPurifier_Exception
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function install($keep = true)
     {
@@ -176,6 +177,8 @@ class ProductComments extends Module
             !$this->registerHook('header') ||
             !$this->registerHook('displayRightColumnProduct') ||
             !$this->registerHook('displayProductListReviews') ||
+            !$this->registerHook('displayBackOfficeHeader') ||
+            !$this->registerHook('actionGetNotificationType') ||
             !Configuration::updateValue('PRODUCT_COMMENTS_MINIMAL_TIME', 30) ||
             !Configuration::updateValue('PRODUCT_COMMENTS_ALLOW_GUESTS', 0) ||
             !Configuration::updateValue('PRODUCT_COMMENTS_MODERATE', 1)
@@ -1076,7 +1079,6 @@ class ProductComments extends Module
             }
         }
     }
-
     /**
      * @param Product $product
      * @return string
@@ -1090,5 +1092,152 @@ class ProductComments extends Module
             return $this->context->link->getImageLink($product->link_rewrite, $image['id_image'], 'medium_default');
         }
         return '';
+    }
+
+    /**
+     * Returns list of reviews for notifications
+     *
+     * @param int $lastId
+     * @param int $limit
+     * @param string[] conditions
+     * @return array
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     */
+    protected function getReviews($lastId, $limit, $conditions)
+    {
+        $lastId = (int)$lastId;
+
+        $baseSql = (new DbQuery())
+            ->from('product_comment', 'pc')
+            ->leftJoin('customer', 'c', 'c.`id_customer` = pc.`id_customer`')
+            ->leftJoin('product_lang', 'pl', 'pl.`id_product` = pc.`id_product` AND pl.`id_lang` = '.(int) $this->context->language->id.Shop::addSqlRestrictionOnLang('pl'))
+            ->where('pc.`deleted` = 0')
+            ->where('pc.`'.bqSQL(ProductComment::$definition['primary']).'` > ' . $lastId);
+        foreach ($conditions as $cond) {
+            $baseSql->where($cond);
+        }
+        $totalSql = clone $baseSql;
+        $totalSql->select('COUNT(1)');
+
+        $detailSql = clone $baseSql;
+        $detailSql
+            ->select('pc.`'.bqSQL(ProductComment::$definition['primary']).'` as id, pc.`id_product`')
+            ->select('IF(c.`id_customer`, CONCAT(c.`firstname`, \' \',  c.`lastname`), pc.`customer_name`) AS `customer_name`')
+            ->select('pc.`title`, pc.`grade`, pc.`date_add`, pl.`name`')
+            ->orderBy('c.`date_add` DESC')
+            ->limit($limit);
+
+        $connection = Db::getInstance(_PS_USE_SQL_SLAVE_);
+
+        $result = $connection->executeS($detailSql);
+        $total = (int)$connection->getValue($totalSql);
+
+        $results = [];
+        $link = $this->context->link->getAdminLink('AdminModules').'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+
+        foreach ($result as $row) {
+            $id = (int)$row['id'];
+            $lastId = max($id, $lastId);
+            $results[] = [
+                'id' => $id,
+                'link' => $link,
+                'product' => $row['name'],
+                'title' => $row['title'],
+                'grade' => round($row['grade'], 2),
+                'customer' => $row['customer_name'],
+                'ts' => (int)strtotime($row['date_add'])
+            ];
+        }
+
+        return [
+            'total' => $total,
+            'lastId' => $lastId,
+            'results' => $results
+        ];
+    }
+
+    /**
+     * Returns list of unapproved reviews
+     *
+     * @param int $lastId
+     * @param int $limit
+     * @return array
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     */
+    public function getReviewsToApprove($lastId, $limit)
+    {
+        return $this->getReviews($lastId, $limit, [ 'pc.validate = 0' ]);
+    }
+
+    /**
+     * Returns list of new reviews
+     *
+     * @param int $lastId
+     * @param int $limit
+     * @return array
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     */
+    public function getNewReviews($lastId, $limit)
+    {
+        return $this->getReviews($lastId, $limit, []);
+    }
+
+    /**
+     * System notification hook
+     *
+     * @return array[]
+     * @throws PrestaShopException
+     * @noinspection PhpUnused
+     */
+    public function hookActionGetNotificationType()
+    {
+        $rendererData = [
+            'from' => $this->l('From:'),
+            'product' => $this->l('Product:'),
+            'ratings' => $this->l('Ratings:')
+        ];
+        if (Configuration::get('PRODUCT_COMMENTS_MODERATE')) {
+            return [
+                'toApprove' => [
+                    'getNotifications' => [$this, 'getReviewsToApprove'],
+                    'renderer' => 'renderProductCommentsReviewNotification',
+                    'rendererData' => $rendererData,
+                    'icon' => 'icon-star-empty',
+                    'header' => $this->l('Reviews to approve'),
+                    'emptyMessage' => $this->l('No reviews to approve.'),
+                    'showAll' => $this->l('Show all reviews'),
+                    'showAllLink' => $this->context->link->getAdminLink('AdminModules') . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name,
+                ]
+            ];
+        } else {
+            return [
+                'newReviews' => [
+                    'getNotifications' => [$this, 'getNewReviews'],
+                    'renderer' => 'renderProductCommentsReviewNotification',
+                    'rendererData' => $rendererData,
+                    'icon' => 'icon-star-empty',
+                    'header' => $this->l('Reviews'),
+                    'emptyMessage' => $this->l('No new reviews.'),
+                    'showAll' => $this->l('Show all reviews'),
+                    'showAllLink' => $this->context->link->getAdminLink('AdminModules') . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name,
+                ]
+            ];
+        }
+    }
+
+    /**
+     * Back office header
+     *
+     * @return void
+     * @noinspection PhpUnused
+     */
+    public function hookDisplayBackOfficeHeader()
+    {
+
+        $this->context->controller->addJS($this->_path . 'views/js/productcomments-notification.js');
+        $this->context->controller->addCSS($this->_path.'views/css/productcomments-back.css', 'all');
     }
 }

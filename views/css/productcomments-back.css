@@ -1,0 +1,14 @@
+.pc-ratings {
+    float: right;
+}
+
+.pc-star {
+    float: left;
+    width: 12px;
+    height: 12px;
+    background: url(../img/star.gif) no-repeat scroll 0 0 transparent
+}
+
+.pc-star-on {
+    background-position: 0 -12px;
+}
