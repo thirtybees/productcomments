@@ -1,4 +1,7 @@
-config_*
-*productcomments*.zip
+/translations/*
+/vendor/*
+!/translations/index.php
 
-/vendor/
+/config*.xml
+
+productcomments-*.zip
