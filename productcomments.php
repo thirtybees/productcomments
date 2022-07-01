@@ -1089,7 +1089,7 @@ class ProductComments extends Module
     {
         $image = Product::getCover((int)$product->id);
         if (isset($image['id_image'])) {
-            return $this->context->link->getImageLink($product->link_rewrite, $image['id_image'], 'medium_default');
+            return $this->context->link->getImageLink($product->link_rewrite, $image['id_image'], 'medium');
         }
         return '';
     }
