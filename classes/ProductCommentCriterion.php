@@ -28,6 +28,9 @@ namespace ProductCommentsModule;
 use Cache;
 use Db;
 use DbQuery;
+use ObjectModel;
+use PrestaShopDatabaseException;
+use PrestaShopException;
 use ProductComments;
 use Shop;
 use Tools;
@@ -40,9 +43,8 @@ if (!defined('_TB_VERSION_')) {
 /**
  * Class ProductCommentCriterion
  */
-class ProductCommentCriterion extends \ObjectModel
+class ProductCommentCriterion extends ObjectModel
 {
-    // @codingStandardsIgnoreStart
     /**
      * @see ObjectModel::$definition
      */
@@ -57,13 +59,21 @@ class ProductCommentCriterion extends \ObjectModel
             'name'                              => ['type' => self::TYPE_STRING, 'lang' => true, 'validate' => 'isGenericName', 'required' => true, 'size' => 128],
         ],
     ];
-    /** @var int $id_product_comment_criterion_type */
+
+    /**
+     * @var int $id_product_comment_criterion_type
+     */
     public $id_product_comment_criterion_type;
-    /** @var string $name */
+
+    /**
+     * @var string $name
+     */
     public $name;
-    /** @var bool $active */
+
+    /**
+     * @var bool $active
+     */
     public $active = true;
-    // @codingStandardsIgnoreEnd
 
     /**
      * Get criterion by Product
@@ -72,6 +82,8 @@ class ProductCommentCriterion extends \ObjectModel
      * @param int $idLang
      *
      * @return array Criterion
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function getByProduct($idProduct, $idLang)
     {
@@ -108,11 +120,13 @@ class ProductCommentCriterion extends \ObjectModel
     /**
      * Get Criterions
      *
-     * @param int      $idLang
+     * @param int $idLang
      * @param int|bool $type
-     * @param bool     $active
+     * @param bool $active
      *
      * @return array Criterions
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function getCriterions($idLang, $type = false, $active = false)
     {
@@ -156,6 +170,8 @@ class ProductCommentCriterion extends \ObjectModel
 
     /**
      * @return bool
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function delete()
     {
@@ -179,6 +195,8 @@ class ProductCommentCriterion extends \ObjectModel
      * @param bool $nullValues
      *
      * @return bool
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function update($nullValues = false)
     {
@@ -203,6 +221,8 @@ class ProductCommentCriterion extends \ObjectModel
      * @param int $idProduct
      *
      * @return bool succeed
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function addProduct($idProduct)
     {
@@ -225,6 +245,8 @@ class ProductCommentCriterion extends \ObjectModel
      * @param int $idCategory
      *
      * @return bool succeed
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function addCategory($idCategory)
     {
@@ -248,6 +270,8 @@ class ProductCommentCriterion extends \ObjectModel
      * @param int $grade
      *
      * @return bool succeed
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function addGrade($idProductComment, $grade)
     {
@@ -272,6 +296,8 @@ class ProductCommentCriterion extends \ObjectModel
 
     /**
      * @return array
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function getProducts()
     {
@@ -293,6 +319,8 @@ class ProductCommentCriterion extends \ObjectModel
 
     /**
      * @return array
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function getCategories()
     {
@@ -316,6 +344,8 @@ class ProductCommentCriterion extends \ObjectModel
      * @param null|int $idProductCommentCriterion
      *
      * @return bool
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function deleteCategories($idProductCommentCriterion = null)
     {
@@ -333,6 +363,8 @@ class ProductCommentCriterion extends \ObjectModel
      * @param null|int $idProductCommentCriterion
      *
      * @return bool
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function deleteProducts($idProductCommentCriterion = null)
     {
@@ -350,6 +382,8 @@ class ProductCommentCriterion extends \ObjectModel
      * @param null|int $idProductCommentCriterion
      *
      * @return bool
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function deleteGrades($idProductCommentCriterion = null)
     {

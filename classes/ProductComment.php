@@ -16,7 +16,7 @@
  * to license@thirtybees.com so we can send you a copy immediately.
  *
  * @author    Thirty Bees <modules@thirtybees.com>
- * @author    PrestaShop SA <contact@prestashop.com>
+ * @author    PrestaShop SA <contact@Prestashop.com>
  * @copyright 2017 Thirty Bees
  * @copyright 2007-2016 PrestaShop SA
  * @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
@@ -31,6 +31,9 @@ use Context;
 use Db;
 use DbQuery;
 use Hook;
+use ObjectModel;
+use PrestaShopDatabaseException;
+use PrestaShopException;
 use Shop;
 use Validate;
 
@@ -41,9 +44,8 @@ if (!defined('_TB_VERSION_')) {
 /**
  * Class ProductComment
  */
-class ProductComment extends \ObjectModel
+class ProductComment extends ObjectModel
 {
-    // @codingStandardsIgnoreStart
     /**
      * @see ObjectModel::$definition
      */
@@ -63,44 +65,80 @@ class ProductComment extends \ObjectModel
             'date_add'      => ['type' => self::TYPE_DATE],
         ],
     ];
+
+    /**
+     * @var int
+     */
     public $id;
-    /** @var integer Product's id */
+
+    /**
+     * @var int Product's id
+     */
     public $id_product;
-    /** @var integer Customer's id */
+
+    /**
+     * @var int Customer's id
+     */
     public $id_customer;
-    /** @var integer Guest's id */
+
+    /**
+     * @var int Guest's id
+     */
     public $id_guest;
-    /** @var integer Customer name */
+
+    /**
+     * @var int Customer name
+     */
     public $customer_name;
-    /** @var string Title */
+
+    /**
+     * @var string Title
+     */
     public $title;
-    /** @var string Content */
+
+    /**
+     * @var string Content
+     */
     public $content;
-    /** @var integer Grade */
+
+    /**
+     * @var int Grade
+     */
     public $grade;
-    /** @var boolean Validate */
+
+    /**
+     * @var boolean Validate
+     */
     public $validate = 0;
+
+    /**
+     * @var int
+     */
     public $deleted = 0;
-    /** @var string Object creation date */
+
+    /**
+     * @var string Object creation date
+     */
     public $date_add;
-    // @codingStandardsIgnoreEnd
 
     /**
      * Get comments by IdProduct
      *
-     * @param int|     $idProduct
-     * @param int|int  $p
+     * @param int $idProduct
+     * @param int|null $p
      * @param int|null $n
      * @param int|null $idCustomer
      *
      * @return false|array Comments
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function getByProduct($idProduct, $p = 1, $n = null, $idCustomer = null)
     {
-        if (!\Validate::isUnsignedId($idProduct)) {
+        if (!Validate::isUnsignedId($idProduct)) {
             return false;
         }
-        $validate = \Configuration::get('PRODUCT_COMMENTS_MODERATE');
+        $validate = Configuration::get('PRODUCT_COMMENTS_MODERATE');
         $p = (int) $p;
         $n = (int) $n;
         if ($p <= 1) {
@@ -136,12 +174,14 @@ class ProductComment extends \ObjectModel
     /**
      * Return customer's comment
      *
-     * @param int      $idProduct
-     * @param int      $idCustomer
-     * @param bool     $getLast
+     * @param int $idProduct
+     * @param int $idCustomer
+     * @param bool $getLast
      * @param int|bool $idGuest
      *
      * @return array Comments
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function getByCustomer($idProduct, $idCustomer, $getLast = false, $idGuest = false)
     {
@@ -170,7 +210,9 @@ class ProductComment extends \ObjectModel
     /**
      * @param int $idProduct
      *
-     * @return array|bool|null|object
+     * @return array|bool|null
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function getRatings($idProduct)
     {
@@ -192,7 +234,9 @@ class ProductComment extends \ObjectModel
     /**
      * @param int $idProduct
      *
-     * @return array|bool|null|object
+     * @return array|bool|null
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function getAverageGrade($idProduct)
     {
@@ -213,6 +257,8 @@ class ProductComment extends \ObjectModel
      * @param int $idLang
      *
      * @return array
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function getAveragesByProduct($idProduct, $idLang)
     {
@@ -250,6 +296,8 @@ class ProductComment extends \ObjectModel
      * @param int $idLang
      *
      * @return false|array Grades
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function getGradeByProduct($idProduct, $idLang)
     {
@@ -286,13 +334,15 @@ class ProductComment extends \ObjectModel
      * @param int $idProduct
      *
      * @return false|int Info
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function getGradedCommentNumber($idProduct)
     {
         if (!Validate::isUnsignedId($idProduct)) {
             return false;
         }
-        $validate = (int) \Configuration::get('PRODUCT_COMMENTS_MODERATE');
+        $validate = (int) Configuration::get('PRODUCT_COMMENTS_MODERATE');
 
         $result = Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow(
             (new DbQuery())
@@ -312,6 +362,8 @@ class ProductComment extends \ObjectModel
      * @param int $idProduct
      *
      * @return false|array Info
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function getCommentNumber($idProduct)
     {
@@ -337,10 +389,12 @@ class ProductComment extends \ObjectModel
     /**
      * Get comments by Validation
      *
-     * @param int  $validate
+     * @param int $validate
      * @param bool $deleted
      *
      * @return array Comments
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function getByValidate($validate = 0, $deleted = false)
     {
@@ -351,7 +405,7 @@ class ProductComment extends \ObjectModel
                 ->select('pc.`title`, pc.`content`, pc.`grade`, pc.`date_add`, pl.`name`')
                 ->from('product_comment', 'pc')
                 ->leftJoin('customer', 'c', 'c.`id_customer` = pc.`id_customer`')
-                ->leftJoin('product_lang', 'pl', 'pl.`id_product` = pc.`id_product` AND pl.`id_lang` = '.(int) \Context::getContext()->language->id.Shop::addSqlRestrictionOnLang('pl'))
+                ->leftJoin('product_lang', 'pl', 'pl.`id_product` = pc.`id_product` AND pl.`id_lang` = '.(int) Context::getContext()->language->id.Shop::addSqlRestrictionOnLang('pl'))
                 ->where('pc.`validate` = '.(int) $validate)
                 ->where($deleted ? 'pc.`deleted` = 1' : '')
                 ->orderBy('pc.`date_add` DESC')
@@ -362,6 +416,8 @@ class ProductComment extends \ObjectModel
      * Get all comments
      *
      * @return array Comments
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function getAll()
     {
@@ -383,6 +439,8 @@ class ProductComment extends \ObjectModel
      * @param int $idCustomer
      *
      * @return bool
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function reportComment($idProductComment, $idCustomer)
     {
@@ -402,6 +460,8 @@ class ProductComment extends \ObjectModel
      * @param int $idCustomer
      *
      * @return bool
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function isAlreadyReport($idProductComment, $idCustomer)
     {
@@ -422,6 +482,8 @@ class ProductComment extends \ObjectModel
      * @param int $idCustomer
      *
      * @return bool
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function setCommentUsefulness($idProductComment, $usefulness, $idCustomer)
     {
@@ -442,6 +504,8 @@ class ProductComment extends \ObjectModel
      * @param int $idCustomer
      *
      * @return bool
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function isAlreadyUsefulness($idProductComment, $idCustomer)
     {
@@ -458,7 +522,7 @@ class ProductComment extends \ObjectModel
      * Get reported comments
      *
      * @return array Comments
-     * @throws \PrestaShopException
+     * @throws PrestaShopException
      */
     public static function getReportedComments()
     {
@@ -469,7 +533,7 @@ class ProductComment extends \ObjectModel
                 ->from('product_comment_report', 'pcr')
                 ->innerJoin(static::$definition['table'], 'pc', '(pc.id_product_comment = pcr.id_product_comment)')
                 ->leftJoin('customer', 'c', 'c.`id_customer` = pc.`id_customer`')
-                ->leftJoin('product_lang', 'pl', 'pl.`id_product` = pc.`id_product` AND pl.`id_lang` = '.(int) Context::getContext()->language->id.' AND pl.`id_lang` = '.(int) Context::getContext()->language->id.\Shop::addSqlRestrictionOnLang('pl'))
+                ->leftJoin('product_lang', 'pl', 'pl.`id_product` = pc.`id_product` AND pl.`id_lang` = '.(int) Context::getContext()->language->id.' AND pl.`id_lang` = '.(int) Context::getContext()->language->id.Shop::addSqlRestrictionOnLang('pl'))
                 ->orderBy('pc.`date_add` DESC');
         return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($query);
     }
@@ -480,6 +544,8 @@ class ProductComment extends \ObjectModel
      * @param int $validate
      *
      * @return bool succeed
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function validate($validate = 1)
     {
@@ -504,13 +570,15 @@ class ProductComment extends \ObjectModel
      * Delete a comment, grade and report data
      *
      * @return boolean succeed
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function delete()
     {
         $success = parent::delete();
-        $success &= ProductComment::deleteGrades($this->id);
-        $success &= ProductComment::deleteReports($this->id);
-        $success &= ProductComment::deleteUsefulness($this->id);
+        $success = ProductComment::deleteGrades($this->id) && $success;
+        $success = ProductComment::deleteReports($this->id) && $success;
+        $success = ProductComment::deleteUsefulness($this->id) && $success;
 
         return $success;
     }
@@ -521,6 +589,8 @@ class ProductComment extends \ObjectModel
      * @param int $idProductComment
      *
      * @return bool succeed
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function deleteGrades($idProductComment)
     {
@@ -540,6 +610,8 @@ class ProductComment extends \ObjectModel
      * @param int $idProductComment
      *
      * @return bool succeed
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function deleteReports($idProductComment)
     {
@@ -559,6 +631,8 @@ class ProductComment extends \ObjectModel
      * @param int $idProductComment
      *
      * @return bool succeed
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public static function deleteUsefulness($idProductComment)
     {

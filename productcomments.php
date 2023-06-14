@@ -37,19 +37,46 @@ require_once __DIR__.'/vendor/autoload.php';
  */
 class ProductComments extends Module
 {
-    // @codingStandardsIgnoreStart
+    /**
+     * @var string
+     */
     protected $moduleHtml = '';
+
+    /**
+     * @var array
+     */
     protected $moduleFilters = [];
+
+    /**
+     * @var array
+     */
     protected $postErrors = [];
 
+    /**
+     * @var array
+     */
     protected $productCommentsCriterionTypes = [];
+
+    /**
+     * @var string
+     */
     protected $baseUrl;
+
+    /**
+     * @var string
+     */
     public $secure_key;
+
+    /**
+     * @var string
+     */
     public $page_name;
-    // @codingStandardsIgnoreEnd
 
     /**
      * ProductComments constructor.
+     *
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function __construct()
     {
@@ -89,7 +116,7 @@ class ProductComments extends Module
 
     /**
      * @return bool
-     * @throws HTMLPurifier_Exception
+     * @throws PrestaShopDatabaseException
      * @throws PrestaShopException
      */
     public function reset()
@@ -148,7 +175,6 @@ class ProductComments extends Module
      * @param bool $keep
      *
      * @return bool
-     * @throws HTMLPurifier_Exception
      * @throws PrestaShopDatabaseException
      * @throws PrestaShopException
      */
@@ -191,6 +217,9 @@ class ProductComments extends Module
 
     /**
      * @return string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     * @throws SmartyException
      */
     public function getContent()
     {
@@ -219,6 +248,9 @@ class ProductComments extends Module
      * @param int $idCriterion
      *
      * @return string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     * @throws SmartyException
      */
     public function renderCriterionForm($idCriterion = 0)
     {
@@ -357,9 +389,11 @@ class ProductComments extends Module
 
     /**
      * @param int|null $idRoot
-     * @param int      $idCriterion
+     * @param int $idCriterion
      *
      * @return string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function initCategoriesAssociation($idRoot = null, $idCriterion = 0)
     {
@@ -391,6 +425,8 @@ class ProductComments extends Module
      * @param int $id
      *
      * @return array
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function getCriterionFieldsValues($id = 0)
     {
@@ -406,6 +442,8 @@ class ProductComments extends Module
 
     /**
      * Post process
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     protected function postProcess()
     {
@@ -490,6 +528,9 @@ class ProductComments extends Module
 
     /**
      * @return string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     * @throws SmartyException
      */
     public function renderConfigForm()
     {
@@ -574,6 +615,7 @@ class ProductComments extends Module
 
     /**
      * @return array
+     * @throws PrestaShopException
      */
     public function getConfigFieldsValues()
     {
@@ -586,6 +628,9 @@ class ProductComments extends Module
 
     /**
      * @return null|string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     * @throws SmartyException
      */
     public function renderModerateLists()
     {
@@ -690,6 +735,9 @@ class ProductComments extends Module
 
     /**
      * @return string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     * @throws SmartyException
      */
     public function renderCriterionList()
     {
@@ -738,6 +786,9 @@ class ProductComments extends Module
 
     /**
      * @return string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     * @throws SmartyException
      */
     public function renderCommentsList()
     {
@@ -782,11 +833,14 @@ class ProductComments extends Module
     }
 
     /**
-     * @param string   $token
-     * @param int      $id
+     * @param string $token
+     * @param int $id
      * @param int|null $name
      *
      * @return string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     * @throws SmartyException
      */
     public function displayApproveLink($token, $id, $name = null)
     {
@@ -801,11 +855,14 @@ class ProductComments extends Module
     }
 
     /**
-     * @param mixed $token
-     * @param mixed $id
-     * @param mixed $name
+     * @param string $token
+     * @param int $id
+     * @param string|null $name
      *
      * @return string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     * @throws SmartyException
      */
     public function displayNoabuseLink($token, $id, $name = null)
     {
@@ -821,6 +878,8 @@ class ProductComments extends Module
 
     /**
      * @return string
+     * @throws PrestaShopException
+     * @throws SmartyException
      */
     public function hookProductTab()
     {
@@ -843,6 +902,9 @@ class ProductComments extends Module
      * @param array $params
      *
      * @return string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     * @throws SmartyException
      */
     public function hookDisplayProductListReviews($params)
     {
@@ -866,6 +928,8 @@ class ProductComments extends Module
      * @param int|null $idProduct
      *
      * @return string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function getCacheId($idProduct = null)
     {
@@ -876,6 +940,9 @@ class ProductComments extends Module
      * @param array $params
      *
      * @return string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     * @throws SmartyException
      */
     public function hookDisplayLeftColumnProduct($params)
     {
@@ -886,6 +953,9 @@ class ProductComments extends Module
      * @param array $params
      *
      * @return string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     * @throws SmartyException
      */
     public function hookDisplayRightColumnProduct($params)
     {
@@ -920,6 +990,9 @@ class ProductComments extends Module
 
     /**
      * @return string
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     * @throws SmartyException
      */
     public function hookProductTabContent()
     {
@@ -983,7 +1056,7 @@ class ProductComments extends Module
     }
 
     /**
-     *
+     * @throws PrestaShopException
      */
     public function hookHeader()
     {
@@ -1007,6 +1080,8 @@ class ProductComments extends Module
      * @param array $params
      *
      * @return bool|string
+     * @throws PrestaShopException
+     * @throws SmartyException
      */
     public function hookExtraProductComparison($params)
     {
@@ -1058,6 +1133,8 @@ class ProductComments extends Module
 
     /**
      * Check delete comment
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     protected function checkDeleteComment()
     {
@@ -1099,8 +1176,10 @@ class ProductComments extends Module
      *
      * @param int $lastId
      * @param int $limit
-     * @param string[] conditions
+     * @param string[] $conditions
+     *
      * @return array
+     *
      * @throws PrestaShopDatabaseException
      * @throws PrestaShopException
      */

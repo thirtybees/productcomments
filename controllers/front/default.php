@@ -40,6 +40,8 @@ class ProductCommentsDefaultModuleFrontController extends ModuleFrontController
 
     /**
      * ProductCommentsDefaultModuleFrontController constructor.
+     *
+     * @throws PrestaShopException
      */
     public function __construct()
     {
@@ -50,6 +52,8 @@ class ProductCommentsDefaultModuleFrontController extends ModuleFrontController
 
     /**
      * Init controller content
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     public function initContent()
     {
@@ -72,6 +76,8 @@ class ProductCommentsDefaultModuleFrontController extends ModuleFrontController
 
     /**
      * Add comment
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
      */
     protected function ajaxProcessAddComment()
     {
@@ -160,6 +166,11 @@ class ProductCommentsDefaultModuleFrontController extends ModuleFrontController
         );
     }
 
+    /**
+     * @return void
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     */
     protected function ajaxProcessReportAbuse()
     {
         if (!Tools::isSubmit('id_product_comment')) {
@@ -177,6 +188,11 @@ class ProductCommentsDefaultModuleFrontController extends ModuleFrontController
         die('0');
     }
 
+    /**
+     * @return void
+     * @throws PrestaShopDatabaseException
+     * @throws PrestaShopException
+     */
     protected function ajaxProcessCommentIsUsefull()
     {
         if (!Tools::isSubmit('id_product_comment') || !Tools::isSubmit('value')) {
