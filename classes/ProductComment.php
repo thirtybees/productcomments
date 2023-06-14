@@ -234,7 +234,7 @@ class ProductComment extends ObjectModel
     /**
      * @param int $idProduct
      *
-     * @return array|bool|null
+     * @return float
      * @throws PrestaShopDatabaseException
      * @throws PrestaShopException
      */
@@ -242,7 +242,7 @@ class ProductComment extends ObjectModel
     {
         $validate = Configuration::get('PRODUCT_COMMENTS_MODERATE');
 
-        return Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow(
+        return (float)Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue(
             (new DbQuery())
                 ->select('(SUM(pc.`grade`) / COUNT(pc.`grade`)) AS `grade`')
                 ->from(bqSQL(static::$definition['table']), 'pc')

@@ -894,7 +894,7 @@ class ProductComments extends Module
                 'allow_guests' => (int) Configuration::get('PRODUCT_COMMENTS_ALLOW_GUESTS'),
                 'comments'     => ProductComment::getByProduct((int) (Tools::getValue('id_product'))),
                 'criterions'   => ProductCommentCriterion::getByProduct((int) (Tools::getValue('id_product')), $this->context->language->id),
-                'averageTotal' => round($average['grade']),
+                'averageTotal' => round($average),
                 'nbComments'   => (int) (ProductComment::getCommentNumber((int) (Tools::getValue('id_product')))),
             ]
         );
@@ -918,7 +918,7 @@ class ProductComments extends Module
             $this->smarty->assign(
                 [
                     'product'      => $params['product'],
-                    'averageTotal' => round($average['grade']),
+                    'averageTotal' => round($average),
                     'ratings'      => ProductComment::getRatings($idProduct),
                     'nbComments'   => (int) ProductComment::getCommentNumber($idProduct),
                 ]
@@ -982,7 +982,7 @@ class ProductComments extends Module
                 'mediumSize'                 => Image::getSize(ImageType::getFormatedName('medium')),
                 'criterions'                 => ProductCommentCriterion::getByProduct((int) Tools::getValue('id_product'), $this->context->language->id),
                 'action_url'                 => '',
-                'averageTotal'               => round($average['grade']),
+                'averageTotal'               => round($average),
                 'ratings'                    => ProductComment::getRatings((int) Tools::getValue('id_product')),
                 'too_early'                  => ($customerComment && ((int) strtotime($customerComment['date_add']) + (int) Configuration::get('PRODUCT_COMMENTS_MINIMAL_TIME')) > time()),
                 'nbComments'                 => (int) (ProductComment::getCommentNumber((int) Tools::getValue('id_product'))),
