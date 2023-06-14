@@ -269,7 +269,7 @@ class ProductComments extends Module
         $productTableValues = Product::getSimpleProducts($this->context->language->id);
         $selectedProducts = $criterion->getProducts();
         foreach ($productTableValues as $key => $product) {
-            if (false !== array_search($product['id_product'], $selectedProducts)) {
+            if (in_array($product['id_product'], $selectedProducts)) {
                 $productTableValues[$key]['selected'] = 1;
             }
         }
@@ -367,6 +367,8 @@ class ProductComments extends Module
             ],
         ];
 
+        /** @var AdminController $controller */
+        $controller = $this->context->controller;
         $helper = new HelperForm();
         $helper->show_toolbar = false;
         $helper->table = $this->name;
@@ -380,7 +382,7 @@ class ProductComments extends Module
         $helper->token = Tools::getAdminTokenLite('AdminModules');
         $helper->tpl_vars = [
             'fields_value' => $this->getCriterionFieldsValues($idCriterion),
-            'languages'    => $this->context->controller->getLanguages(),
+            'languages'    => $controller->getLanguages(),
             'id_language'  => $this->context->language->id,
         ];
 
@@ -470,7 +472,7 @@ class ProductComments extends Module
 
             $languages = Language::getLanguages();
             $name = [];
-            foreach ($languages as $key => $value) {
+            foreach ($languages as $value) {
                 $name[$value['id_lang']] = Tools::getValue('name_'.$value['id_lang']);
             }
             $criterion->name = $name;
@@ -593,6 +595,8 @@ class ProductComments extends Module
             ],
         ];
 
+        /** @var AdminController $controller */
+        $controller = $this->context->controller;
         $helper = new HelperForm();
         $helper->show_toolbar = false;
         $helper->table = $this->name;
@@ -606,7 +610,7 @@ class ProductComments extends Module
         $helper->token = Tools::getAdminTokenLite('AdminModules');
         $helper->tpl_vars = [
             'fields_value' => $this->getConfigFieldsValues(),
-            'languages'    => $this->context->controller->getLanguages(),
+            'languages'    => $controller->getLanguages(),
             'id_language'  => $this->context->language->id,
         ];
 
@@ -959,7 +963,7 @@ class ProductComments extends Module
      */
     public function hookDisplayRightColumnProduct($params)
     {
-        $idGuest = (!$id_customer = (int) $this->context->cookie->id_customer) ? (int) $this->context->cookie->id_guest : false;
+        $idGuest = (!(int) $this->context->cookie->id_customer) ? (int) $this->context->cookie->id_guest : false;
         $customerComment = ProductComment::getByCustomer((int) (Tools::getValue('id_product')), (int) $this->context->cookie->id_customer, true, (int) $idGuest);
 
         $average = ProductComment::getAverageGrade((int) Tools::getValue('id_product'));
@@ -996,11 +1000,14 @@ class ProductComments extends Module
      */
     public function hookProductTabContent()
     {
-        $this->context->controller->addJS($this->_path.'views/js/jquery.rating.pack.js');
-        $this->context->controller->addJS($this->_path.'views/js/jquery.textareaCounter.plugin.js');
-        $this->context->controller->addJS($this->_path.'views/js/productcomments.js');
+        /** @var ProductController $controller */
+        $controller = $this->context->controller;
 
-        $idGuest = (!$idCustomer = (int) $this->context->cookie->id_customer) ? (int) $this->context->cookie->id_guest : false;
+        $controller->addJS($this->_path.'views/js/jquery.rating.pack.js');
+        $controller->addJS($this->_path.'views/js/jquery.textareaCounter.plugin.js');
+        $controller->addJS($this->_path.'views/js/productcomments.js');
+
+        $idGuest = (!(int) $this->context->cookie->id_customer) ? (int) $this->context->cookie->id_guest : false;
         $customerComment = ProductComment::getByCustomer((int) (Tools::getValue('id_product')), (int) $this->context->cookie->id_customer, true, (int) $idGuest);
 
         $averages = ProductComment::getAveragesByProduct((int) Tools::getValue('id_product'), $this->context->language->id);
@@ -1010,8 +1017,6 @@ class ProductComments extends Module
         }
         $averageTotal = count($averages) ? ($averageTotal / count($averages)) : 0;
 
-        /** @var ProductController $controller */
-        $controller = $this->context->controller;
         $product = $controller->getProduct();
 
         $this->context->smarty->assign(
@@ -1038,7 +1043,7 @@ class ProductComments extends Module
             ]
         );
 
-        $this->context->controller->pagination((int) ProductComment::getCommentNumber((int) Tools::getValue('id_product')));
+        $controller->pagination((int) ProductComment::getCommentNumber((int) Tools::getValue('id_product')));
 
         Media::addJsDef([
             'productcomments_controller_url' => htmlspecialchars($this->context->link->getModuleLink('productcomments', 'default', [], true), ENT_QUOTES, 'UTF-8'),
